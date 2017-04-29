@@ -1,0 +1,36 @@
+This repository allows you to spawn a ruby application server and gives you a view on how global variables and constants are handled.
+
+Depending on the server you are running and the spawning mode of the server (thread based like in puma or process-based as in thin) the variables might be shared.
+This leads to problems when you are mutating shared variables or are trying to do sequential work and eventually run into locking problems.
+
+Keep in mind that class variables and class instance variables should exactly behave like global variables in terms of sharing.
+
+RUN
+===
+
+The server starts and sets a $config and MY_CONFIG var.
+
+Both are then read later ... the $config var is incremented.
+
+When you open another connection to the sever, all data is displayed again and you can check if the information has been retained or resetted.
+
+FINDINGS
+========
+
+- Although thin is said to be single-threaded the mutated values of $config are retained `rackup sinatra.ru -s thin`
+- Puma as a multi-threaded server behaves as expected and the mutated values of $config are retained `rackup sinatra.ru -s puma`
+- It does not matter whether a sinatra app is used `rackup sinatra.ru -s thin` or a plain lambda `rackup plain.ru -s thin`
+
+LESSON
+======
+Never mutate global variables or constants once the application server is started
+
+QUESTION
+========
+
+If you ever need changing configuration available between requests that CHANGE between requests: Use dependency injection with instance vars
+
+REFERENCES
+=========
+
+A good sum up of puma vs. thin is given here: https://www.quora.com/Ruby-programming-language-How-does-puma-compare-to-thin#!n=12
